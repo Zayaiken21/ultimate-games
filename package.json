@@ -1,13 +1,15 @@
 {
-  "name": "ultimate-games-render-fixed",
-  "version": "1.0.0",
-  "description": "Ultimate Games static arcade served correctly on Render",
+  "name": "ultimate-games-power-render-build",
+  "version": "2.0.0",
+  "description": "Ultimate Games arcade launcher with all uploaded HTML games, fixed routes, Socket.IO and WebSocket multiplayer on Render.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^4.19.2",
+    "ws": "^8.18.0",
+    "socket.io": "^4.7.5"
   },
   "engines": {
     "node": ">=18"

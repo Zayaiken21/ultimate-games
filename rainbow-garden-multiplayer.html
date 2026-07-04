@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Rainbow Garden Multiplayer</title>
+<style>
+:root{
+  --pink:#ff7ac8;
+  --purple:#8b5cf6;
+  --blue:#45c4ff;
+  --green:#65d66e;
+  --yellow:#ffd166;
+  --cream:#fff8ec;
+  --text:#394150;
+  --card:rgba(255,255,255,.82);
+  --shadow:0 18px 45px rgba(62,39,120,.22);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Nunito,system-ui,-apple-system,Segoe UI,sans-serif;background:#bfefff;color:var(--text)}
+body{
+  background:
+    radial-gradient(circle at 15% 15%,rgba(255,255,255,.9),transparent 20%),
+    radial-gradient(circle at 85% 8%,rgba(255,255,255,.75),transparent 18%),
+    linear-gradient(180deg,#bcefff 0%,#e9f7ff 45%,#dffbd3 100%);
+}
+#app{position:relative;width:100vw;height:100dvh;overflow:hidden}
+.screen{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:18px}
+.screen.active{display:flex}
+.card{
+  width:min(760px,94vw);
+  max-height:94dvh;
+  overflow:auto;
+  background:var(--card);
+  backdrop-filter:blur(18px);
+  border:2px solid rgba(255,255,255,.85);
+  border-radius:34px;
+  box-shadow:var(--shadow);
+  padding:24px;
+  text-align:center;
+}
+h1{font-size:clamp(2.1rem,8vw,4.4rem);margin:6px 0 4px;line-height:.95;color:#fff;text-shadow:0 5px 0 rgba(139,92,246,.25),0 10px 25px rgba(139,92,246,.28)}
+h2{margin:4px 0 12px;font-size:clamp(1.4rem,5vw,2.4rem)}
+p{font-size:clamp(1rem,3.8vw,1.25rem);line-height:1.35}
+.logo-badge{font-size:3.3rem;filter:drop-shadow(0 8px 14px rgba(0,0,0,.1))}
+.btn{
+  border:0;border-radius:999px;padding:15px 22px;margin:8px;
+  font-weight:900;font-size:1.05rem;color:#fff;
+  background:linear-gradient(135deg,var(--pink),var(--purple));
+  box-shadow:0 10px 0 rgba(112,73,196,.25),0 18px 30px rgba(139,92,246,.25);
+  cursor:pointer;min-width:180px;
+}
+.btn:active{transform:translateY(4px);box-shadow:0 6px 0 rgba(112,73,196,.25),0 10px 20px rgba(139,92,246,.25)}
+.btn.alt{background:linear-gradient(135deg,#45c4ff,#65d66e);box-shadow:0 10px 0 rgba(36,158,137,.24),0 18px 30px rgba(69,196,255,.2)}
+.btn.small{min-width:auto;padding:10px 15px;font-size:.95rem}
+.input{
+  width:min(320px,90%);padding:16px 18px;border-radius:22px;border:3px solid rgba(139,92,246,.25);
+  font-size:1.3rem;text-align:center;font-weight:900;text-transform:uppercase;color:var(--purple);
+  outline:none;background:#fff;
+}
+.row{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px}
+.mode-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:18px 0}
+.mode-card{
+  padding:16px;border-radius:26px;background:rgba(255,255,255,.78);border:2px solid rgba(255,255,255,.9);
+  box-shadow:0 10px 24px rgba(72,64,110,.12);cursor:pointer;
+}
+.mode-card b{display:block;font-size:1.1rem;margin:8px}
+#game{position:absolute;inset:0;display:none;overflow:hidden;touch-action:none}
+#sky{position:absolute;inset:0;background:linear-gradient(180deg,#99e4ff 0%,#dbf7ff 42%,#99e47a 100%)}
+.cloud{position:absolute;background:rgba(255,255,255,.8);height:28px;border-radius:999px;animation:cloudMove 28s linear infinite}
+.cloud:before,.cloud:after{content:"";position:absolute;background:inherit;border-radius:50%}
+.cloud:before{width:42px;height:42px;left:18px;top:-20px}.cloud:after{width:34px;height:34px;right:18px;top:-13px}
+@keyframes cloudMove{from{transform:translateX(-35vw)}to{transform:translateX(135vw)}}
+#garden{
+  position:absolute;left:50%;bottom:0;transform:translateX(-50%);
+  width:min(900px,100vw);height:100dvh;perspective:800px;
+}
+.lane{
+  position:absolute;bottom:-8dvh;width:30%;height:75dvh;border-radius:40px 40px 0 0;
+  background:linear-gradient(180deg,rgba(255,255,255,.25),rgba(255,255,255,.04));
+  border-left:2px dashed rgba(255,255,255,.35);border-right:2px dashed rgba(255,255,255,.25);
+  transform:rotateX(55deg);transform-origin:bottom;
+}
+.lane:nth-child(1){left:5%}.lane:nth-child(2){left:35%}.lane:nth-child(3){left:65%}
+#player{
+  position:absolute;bottom:7dvh;left:50%;width:76px;height:76px;margin-left:-38px;border-radius:50%;
+  background:radial-gradient(circle at 30% 25%,#fff,#ffe082 30%,#ff9f1c 75%);
+  box-shadow:0 18px 30px rgba(75,70,40,.25);z-index:20;transition:left .14s ease;
+}
+#player:before{content:"😊";position:absolute;inset:0;display:grid;place-items:center;font-size:40px}
+#player.remote{bottom:16dvh;opacity:.75;transform:scale(.78);background:radial-gradient(circle at 30% 25%,#fff,#a8f0ff 30%,#45c4ff 75%)}
+.item{
+  position:absolute;width:70px;height:70px;border-radius:50%;display:grid;place-items:center;font-size:46px;
+  filter:drop-shadow(0 12px 12px rgba(45,45,65,.18));z-index:15;
+}
+.badge{
+  position:absolute;top:env(safe-area-inset-top,0);left:0;right:0;display:flex;justify-content:space-between;gap:8px;padding:12px;z-index:50;
+}
+.stat{
+  background:rgba(255,255,255,.82);backdrop-filter:blur(12px);border:2px solid rgba(255,255,255,.85);
+  padding:9px 12px;border-radius:18px;font-weight:900;box-shadow:0 10px 22px rgba(62,39,120,.12);font-size:.95rem;
+}
+#message{
+  position:absolute;left:50%;top:17%;transform:translateX(-50%);z-index:60;
+  background:rgba(255,255,255,.9);padding:14px 18px;border-radius:22px;font-size:1.15rem;font-weight:900;
+  box-shadow:var(--shadow);opacity:0;transition:opacity .2s, transform .2s;pointer-events:none;text-align:center;
+}
+#message.show{opacity:1;transform:translateX(-50%) scale(1.02)}
+#pauseBtn{position:absolute;right:12px;bottom:12px;z-index:70;min-width:auto}
+#toast{min-height:26px;font-weight:900;color:#7c3aed}
+.help{font-size:.94rem;opacity:.82}
+.codebox{font-size:2rem;letter-spacing:.18em;font-weight:1000;color:var(--purple);background:#fff;padding:14px 18px;border-radius:22px;display:inline-block;margin:8px;border:3px dashed rgba(139,92,246,.35)}
+</style>
+</head>
+<body>
+<div id="app">
+  <section id="menu" class="screen active">
+    <div class="card">
+      <div class="logo-badge">🌈🌼</div>
+      <h1>Rainbow Garden</h1>
+      <h2>Multiplayer Adventure</h2>
+      <p>Catch happy flowers, collect stars, and grow the garden together. No violence, no scary content — just bright kid-safe fun.</p>
+      <div class="mode-grid">
+        <div class="mode-card" onclick="startSolo()"><div style="font-size:2.5rem">🎮</div><b>Solo Play</b><span>10 cheerful levels</span></div>
+        <div class="mode-card" onclick="showLobby()"><div style="font-size:2.5rem">👯</div><b>Multiplayer</b><span>Create or join with a code</span></div>
+        <div class="mode-card" onclick="showHow()"><div style="font-size:2.5rem">✨</div><b>How to Play</b><span>Swipe left and right</span></div>
+      </div>
+      <p class="help">Tip: for online multiplayer, run the included server and open the game using that server URL.</p>
+    </div>
+  </section>
+
+  <section id="lobby" class="screen">
+    <div class="card">
+      <h2>👯 Multiplayer Garden</h2>
+      <p>One player creates a lobby. Friends type the lobby code to join.</p>
+      <div id="connectionStatus" class="help">Server: checking...</div>
+      <div id="myLobbyCode"></div>
+      <div class="row">
+        <button class="btn" onclick="createLobby()">Create Lobby</button>
+        <button class="btn alt" onclick="joinLobby()">Join Lobby</button>
+      </div>
+      <input id="lobbyInput" class="input" maxlength="6" placeholder="CODE" />
+      <div id="toast"></div>
+      <button class="btn small" onclick="showMenu()">Back</button>
+    </div>
+  </section>
+
+  <section id="how" class="screen">
+    <div class="card">
+      <h2>How to Play 🌼</h2>
+      <p>Swipe or drag left and right to move your garden buddy. Catch flowers and stars. Missing a flower is okay — this is friendly play.</p>
+      <p>Each level needs more garden points. Reach level 10 to complete the rainbow garden!</p>
+      <button class="btn" onclick="showMenu()">Back</button>
+    </div>
+  </section>
+
+  <section id="end" class="screen">
+    <div class="card">
+      <h2 id="endTitle">Great Job!</h2>
+      <p id="endText"></p>
+      <button class="btn" onclick="startSolo()">Play Again</button>
+      <button class="btn alt" onclick="showMenu()">Main Menu</button>
+    </div>
+  </section>
+
+  <main id="game">
+    <div id="sky"></div>
+    <div class="cloud" style="left:5%;top:13%;width:105px;animation-delay:-8s"></div>
+    <div class="cloud" style="left:45%;top:8%;width:135px;animation-delay:-18s"></div>
+    <div class="cloud" style="left:75%;top:19%;width:95px;animation-delay:-3s"></div>
+    <div id="garden">
+      <div class="lane"></div><div class="lane"></div><div class="lane"></div>
+      <div id="player"></div>
+      <div id="remotePlayer" class="remote" style="display:none"></div>
+    </div>
+    <div class="badge">
+      <div class="stat">🌼 Score <span id="score">0</span></div>
+      <div class="stat">⭐ Level <span id="level">1</span>/10</div>
+      <div class="stat">🎯 Need <span id="need">8</span></div>
+    </div>
+    <div id="message"></div>
+    <button id="pauseBtn" class="btn small" onclick="pauseGame()">Menu</button>
+  </main>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let state = {
+  playing:false, multiplayer:false, ws:null, lobby:null, playerId:null,
+  score:0, level:1, lane:1, target:8, items:[], lastSpawn:0, speed:2.4,
+  lastTime:0, dragStart:null, remoteLane:1
+};
+const lanes = [20,50,80];
+const levelTargets = [8,16,25,35,46,58,71,85,100,118];
+
+function screen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); $(id).classList.add('active'); $('game').style.display='none';}
+function showMenu(){stopGame(); screen('menu');}
+function showLobby(){screen('lobby'); checkServer();}
+function showHow(){screen('how');}
+
+function startSolo(){state.multiplayer=false; startGame();}
+function startGame(){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $('game').style.display='block';
+  Object.assign(state,{playing:true,score:0,level:1,lane:1,target:levelTargets[0],items:[],lastSpawn:0,speed:2.4,lastTime:0});
+  document.querySelectorAll('.item').forEach(x=>x.remove());
+  $('remotePlayer').style.display = state.multiplayer ? 'block' : 'none';
+  updateHud(); movePlayer(); message('Swipe to catch flowers 🌼');
+  requestAnimationFrame(loop);
+}
+function stopGame(){state.playing=false; document.querySelectorAll('.item').forEach(x=>x.remove());}
+
+function movePlayer(){
+  $('player').style.left = lanes[state.lane] + '%';
+  if(state.ws && state.ws.readyState===1 && state.multiplayer){
+    state.ws.send(JSON.stringify({type:'move', lane:state.lane, lobby:state.lobby, playerId:state.playerId}));
+  }
+}
+function updateRemote(lane){$('remotePlayer').style.left=lanes[lane]+'%'; $('remotePlayer').style.display='block';}
+function updateHud(){ $('score').textContent=state.score; $('level').textContent=state.level; $('need').textContent=Math.max(0,state.target-state.score); }
+
+function loop(t){
+  if(!state.playing) return;
+  const dt = Math.min(32, t - (state.lastTime || t));
+  state.lastTime = t;
+  if(t - state.lastSpawn > Math.max(520, 1050 - state.level*55)){
+    spawnItem();
+    state.lastSpawn = t;
+  }
+  updateItems(dt);
+  requestAnimationFrame(loop);
+}
+
+function spawnItem(){
+  const lane = Math.floor(Math.random()*3);
+  const emoji = Math.random() > .18 ? (Math.random()>.5?'🌼':'🌸') : '⭐';
+  const item = document.createElement('div');
+  item.className='item';
+  item.textContent=emoji;
+  item.dataset.lane=lane;
+  item.dataset.y='-8';
+  item.style.left = `calc(${lanes[lane]}% - 35px)`;
+  item.style.top = '-80px';
+  $('garden').appendChild(item);
+  state.items.push(item);
+}
+function updateItems(dt){
+  const gardenH = $('garden').clientHeight;
+  const catchY = gardenH * .78;
+  for(let i=state.items.length-1;i>=0;i--){
+    const item=state.items[i];
+    let y=parseFloat(item.dataset.y);
+    y += state.speed * dt * .055;
+    item.dataset.y=y;
+    const top = (y/100)*gardenH;
+    item.style.top = top+'px';
+    item.style.transform = `scale(${.62 + y/115}) rotate(${y*2}deg)`;
+    const sameLane = Number(item.dataset.lane)===state.lane;
+    if(sameLane && top > catchY-58 && top < catchY+86){
+      collect(item);
+      state.items.splice(i,1);
+    } else if(top > gardenH + 90){
+      item.remove(); state.items.splice(i,1);
+    }
+  }
+}
+function collect(item){
+  const points = item.textContent==='⭐'?3:1;
+  state.score += points;
+  item.remove();
+  pop('+'+points+' '+item.textContent);
+  if(state.ws && state.ws.readyState===1 && state.multiplayer){
+    state.ws.send(JSON.stringify({type:'score', lobby:state.lobby, playerId:state.playerId, score:state.score, level:state.level}));
+  }
+  if(state.score >= state.target){
+    if(state.level>=10) return winGame();
+    state.level++;
+    state.target=levelTargets[state.level-1];
+    state.speed += .35;
+    message('Level '+state.level+'! 🌈');
+  }
+  updateHud();
+}
+function winGame(){
+  stopGame();
+  $('endTitle').textContent='Rainbow Garden Complete! 🌈';
+  $('endText').textContent='Amazing teamwork! You reached level 10 and filled the garden with color.';
+  screen('end');
+}
+function pauseGame(){showMenu();}
+function message(txt){const m=$('message');m.textContent=txt;m.classList.add('show');setTimeout(()=>m.classList.remove('show'),1600)}
+function pop(txt){message(txt)}
+
+function setLaneFromX(x){
+  const w=window.innerWidth;
+  const next = x < w/3 ? 0 : x > w*2/3 ? 2 : 1;
+  if(next!==state.lane){state.lane=next; movePlayer();}
+}
+window.addEventListener('pointerdown',e=>{ if(!state.playing)return; state.dragStart=e.clientX; setLaneFromX(e.clientX); });
+window.addEventListener('pointermove',e=>{ if(!state.playing)return; setLaneFromX(e.clientX); });
+window.addEventListener('keydown',e=>{
+  if(!state.playing)return;
+  if(e.key==='ArrowLeft') state.lane=Math.max(0,state.lane-1);
+  if(e.key==='ArrowRight') state.lane=Math.min(2,state.lane+1);
+  movePlayer();
+});
+
+function serverUrl(){
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  return proto + '://' + location.host + '/rainbow-ws';
+}
+function checkServer(){
+  if(location.protocol==='file:'){
+    $('connectionStatus').textContent='Server: open through http://localhost:3000, not file://';
+    return;
+  }
+  $('connectionStatus').textContent='Server: ready when hosted by server.js';
+}
+function connectSocket(){
+  return new Promise((resolve,reject)=>{
+    if(location.protocol==='file:') return reject(new Error('Open the game from the server URL, not as a file.'));
+    const ws = new WebSocket(serverUrl());
+    ws.onopen=()=>{state.ws=ws; resolve(ws)};
+    ws.onerror=()=>reject(new Error('Could not connect to multiplayer server.'));
+    ws.onmessage=e=>{
+      const msg=JSON.parse(e.data);
+      if(msg.type==='created'){
+        state.lobby=msg.code; state.playerId=msg.playerId;
+        $('myLobbyCode').innerHTML='<p>Your Lobby Code</p><div class="codebox">'+msg.code+'</div><p class="help">Share this code with the other player.</p>';
+        $('toast').textContent='Lobby created. Waiting for friends 🌼';
+      }
+      if(msg.type==='joined'){
+        state.lobby=msg.code; state.playerId=msg.playerId;
+        $('toast').textContent='Joined lobby '+msg.code+' 🌈';
+        state.multiplayer=true; startGame();
+      }
+      if(msg.type==='start'){
+        state.multiplayer=true; startGame();
+      }
+      if(msg.type==='peerMove') updateRemote(msg.lane);
+      if(msg.type==='peerScore') message('Friend score: '+msg.score+' 🌟');
+      if(msg.type==='error') $('toast').textContent=msg.message;
+    };
+  });
+}
+async function createLobby(){
+  try{
+    const ws= await connectSocket();
+    ws.send(JSON.stringify({type:'create'}));
+  }catch(e){$('toast').textContent=e.message;}
+}
+async function joinLobby(){
+  const code=$('lobbyInput').value.trim().toUpperCase();
+  if(!code) return $('toast').textContent='Type the lobby code first.';
+  try{
+    const ws= await connectSocket();
+    ws.send(JSON.stringify({type:'join', code}));
+  }catch(e){$('toast').textContent=e.message;}
+}
+</script>
+</body>
+</html>
