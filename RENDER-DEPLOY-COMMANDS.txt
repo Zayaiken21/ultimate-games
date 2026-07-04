@@ -1,0 +1,26 @@
+# Render Deploy Commands
+
+Use these settings on Render:
+
+Build Command:
+npm install
+
+Start Command:
+npm start
+
+Environment:
+Node
+
+This fixed ZIP keeps your existing files and adds:
+- package.json
+- server.js
+- render.yaml
+
+Important:
+Upload/commit the CONTENTS of this folder to GitHub so these files are at the repo root:
+
+index.html
+server.js
+package.json
+render.yaml
+games/
